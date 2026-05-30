@@ -1,55 +1,66 @@
 const prompt = require('prompt-sync')({ sigint: true });
 
-const easyLevelChoice = 1;
-const mediumLevelChoice = 2;
-const hardLevelChoice = 3;
+const levels = {
+  easy: { choice: 1, attempts: 10 },
+  medium: { choice: 2, attempts: 5 },
+  hard: { choice: 3, attempts: 3 },
+};
 
-const easyLevelAttempts = 10;
-const mediumLevelAttempts = 5;
-const hardLevelAttempts = 3;
-
-let randNumber = Math.trunc(Math.random() * 100) + 1;
-let totalAttempts = easyLevelAttempts;
-let i = 1;
 let keepPlaying = true;
+let randNumber = Math.trunc(Math.random() * 100) + 1;
+let userChoice = levels.easy.choice;
+let i = 1;
 
-// TODO: make start, end numbers dynamic not static
-console.log(
-  `Welcome to the Number Guessing Game!\nI'm thinking of a number between 1 and 100.\nYou have 5 chances to guess the correct number.\n`,
-);
+const chooseLevel = function (userChoice) {
+  if (userChoice === levels.easy.choice) {
+    console.log('\nGreat! You have selected the Easy difficulty level.');
+    return levels.easy.attempts;
+  } else if (userChoice === levels.medium.choice) {
+    console.log('\nGreat! You have selected the Medium difficulty level.');
+    return levels.medium.attempts;
+  } else if (userChoice === levels.hard.choice) {
+    console.log('\nGreat! You have selected the Hard difficulty level.');
+    return levels.hard.attempts;
+  } else console.log('Invalid Input!');
+};
 
-console.log(
-  `Please select the difficulty level:\n1. Easy (${easyLevelAttempts} chances)\n2. Medium (${mediumLevelAttempts} chances)\n3. Hard (${hardLevelAttempts} chances)\n`,
-);
-
-totalAttempts = Number(prompt('Enter your choice: '));
-
-if (totalAttempts === easyLevelChoice)
-  console.log('\nGreat! You have selected the Easy difficulty level.');
-else if (totalAttempts === mediumLevelChoice)
-  console.log('\nGreat! You have selected the Medium difficulty level.');
-else if (totalAttempts === hardLevelChoice)
-  console.log('\nGreat! You have selected the Hard difficulty level.');
-else console.log('Invalid Input!');
-
-console.log(`Let's start the game!`);
-
-while (keepPlaying) {
-  console.log('');
-  const userInput = Number(prompt('Enter your guess: '));
-
-  if (userInput === randNumber) {
+const checkUserGuess = function (userGuess, keepPlaying) {
+  if (userGuess === randNumber) {
     console.log(
       `Congratulations! You guessed the correct number in ${i} attempts.`,
     );
-    keepPlaying = false;
-  } else if (userInput > randNumber) {
-    console.log(`Incorrect! The number is less than ${userInput}.`);
-  } else if (userInput < randNumber) {
-    console.log(`Incorrect! The number is greater than ${userInput}.`);
+    return (keepPlaying = false);
+  } else if (userGuess > randNumber) {
+    console.log(`Incorrect! The number is less than ${userGuess}.`);
+  } else if (userGuess < randNumber) {
+    console.log(`Incorrect! The number is greater than ${userGuess}.`);
   } else {
     console.log('Invalid Input!');
   }
+  return keepPlaying;
+};
 
-  i++;
-}
+const playGame = function (availableAttempts) {
+  console.log(`Let's start the game!`);
+
+  while (keepPlaying && i <= availableAttempts) {
+    console.log('');
+    const userGuess = Number(prompt('Enter your guess: '));
+    keepPlaying = checkUserGuess(userGuess, keepPlaying);
+
+    i++;
+  }
+};
+
+// TODO: make start, end numbers dynamic not static
+console.log(
+  `Welcome to the Number Guessing Game!\nI'm thinking of a number between 1 and 100.\n`,
+);
+
+console.log(
+  `Please select the difficulty level:\n${levels.easy.choice}. Easy (${levels.easy.attempts} chances)\n${levels.medium.choice}. Medium (${levels.medium.attempts} chances)\n${levels.hard.choice}. Hard (${levels.hard.attempts} chances)\n`,
+);
+
+userChoice = Number(prompt('Enter your choice: '));
+
+playGame(chooseLevel(userChoice));
