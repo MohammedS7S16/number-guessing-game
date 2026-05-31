@@ -1,72 +1,85 @@
 const prompt = require('prompt-sync')({ sigint: true });
 
 const levels = {
-  easy: { choice: 1, attempts: 10 },
-  medium: { choice: 2, attempts: 5 },
-  hard: { choice: 3, attempts: 3 },
+  1: { level: 'Easy', attempts: 10 },
+  2: { level: 'Medium', attempts: 5 },
+  3: { level: 'Hard', attempts: 3 },
 };
 
-const chooseLevel = function (userChoice) {
-  if (userChoice === levels.easy.choice) {
-    console.log('\nGreat! You have selected the Easy difficulty level.');
-    return levels.easy.attempts;
-  } else if (userChoice === levels.medium.choice) {
-    console.log('\nGreat! You have selected the Medium difficulty level.');
-    return levels.medium.attempts;
-  } else if (userChoice === levels.hard.choice) {
-    console.log('\nGreat! You have selected the Hard difficulty level.');
-    return levels.hard.attempts;
-  } else console.log('Invalid Input!');
-};
+const getRandNumber = (MIN, MAX) => Math.trunc(Math.random() * (MAX - MIN + 1)) + MIN;
 
-const checkUserGuess = function (randNumber, userGuess, attemptCount, win) {
-  if (userGuess === randNumber) {
-    console.log(`Congratulations! You guessed the correct number in ${attemptCount} attempts.`);
-    return (win = true);
-  } else if (userGuess > randNumber) {
-    console.log(`Incorrect! The number is less than ${userGuess}.`);
-  } else if (userGuess < randNumber) {
-    console.log(`Incorrect! The number is greater than ${userGuess}.`);
-  } else {
-    console.log('Invalid Input!');
+const getValidNumber = function (message) {
+  let value = prompt(message);
+  while (Number.isNaN(Number(value)) || value.trim() === '' || !Number.isInteger(Number(value))) {
+    console.log('Please enter a valid number!\n');
+    value = prompt(message);
   }
-  return win;
+  return Number(value);
 };
 
-const playGame = function (totalAttempts, min, max) {
-  const randNumber = Math.trunc(Math.random() * (max - min + 1)) + min;
-  let leftAttempts = totalAttempts;
-  let attemptCount = 0;
+const chooseLevel = function () {
+  console.log(`Please select the difficulty level:\n`);
+  for (const [key, { level, attempts }] of Object.entries(levels)) {
+    console.log(`${key}. ${level} (${attempts} chances)`);
+  }
+
+  console.log('');
+  let choice = getValidNumber('Enter your choice: ');
+  while (!levels[choice]) {
+    console.log('Please select an available game level!\n');
+    choice = getValidNumber('Enter your choice: ');
+  }
+
+  const { level, attempts } = levels[choice];
+  console.log(`\nGreat! You have selected the ${level} difficulty level.`);
+
+  return attempts;
+};
+
+const playGame = function (totalAttempts, MIN, MAX) {
+  const secret = getRandNumber(MIN, MAX);
+  let attemptsCount = 0;
   let win = false;
 
-  console.log(`Let's start the game!`);
+  console.log(`Let's start the game! You have ${totalAttempts} attempts.`);
 
-  while (!win && leftAttempts > 0) {
+  while (!win && totalAttempts > 0) {
     console.log('');
-    const userGuess = Number(prompt('Enter your guess: '));
+    let userGuess = Number(getValidNumber('Enter your guess: '));
 
-    attemptCount++;
-    win = checkUserGuess(randNumber, userGuess, attemptCount, win);
+    while (userGuess < MIN || userGuess > MAX) {
+      console.log(`\navailable numbers from ${MIN} to ${MAX} only!`);
+      userGuess = Number(getValidNumber('Enter your guess: '));
+    }
 
-    leftAttempts--;
+    attemptsCount++;
+    totalAttempts--;
+
+    if (userGuess === secret) {
+      console.log(
+        `Congratulations! You guessed the correct number in ${attemptsCount} attempt(s).`,
+      );
+      win = true;
+    } else {
+      if (userGuess > secret) {
+        console.log(`Incorrect! The number is less than ${userGuess}.`);
+      } else if (userGuess < secret) {
+        console.log(`Incorrect! The number is greater than ${userGuess}.`);
+      }
+      console.log(`${totalAttempts} attempt(s) remaining.`);
+    }
   }
 
-  if (!win) console.log(`\nYou are out of attempts!, the number was ${randNumber}.`);
+  if (!win) console.log(`\nYou are out of attempt(s)!, the number was ${secret}.`);
 };
 
 // --- Main ---
 
-const min = 1;
-const max = 100;
+const MIN = 1;
+const MAX = 100;
 
-console.log(
-  `Welcome to the Number Guessing Game!\nI'm thinking of a number between ${min} and ${max}.\n`,
-);
+console.log(`\nWelcome to the Number Guessing Game!`);
+console.log(`I'm thinking of a number between ${MIN} and ${MAX}.\n`);
 
-console.log(
-  `Please select the difficulty level:\n${levels.easy.choice}. Easy (${levels.easy.attempts} chances)\n${levels.medium.choice}. Medium (${levels.medium.attempts} chances)\n${levels.hard.choice}. Hard (${levels.hard.attempts} chances)\n`,
-);
-
-const userChoice = Number(prompt('Enter your choice: '));
-
-playGame(chooseLevel(userChoice), min, max);
+const totalAttempts = chooseLevel();
+playGame(totalAttempts, MIN, MAX);
